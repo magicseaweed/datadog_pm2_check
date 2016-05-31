@@ -16,18 +16,18 @@ class Pm2(AgentCheck):
 
     def check(self, instance):
 
-        for instance in load_json(instance['command'].split(' ')):
-            node_app_instance = instance['pm2_env']['NODE_APP_INSTANCE']
-
-            tags = ["node_id:%s" % node_app_instance]
+        for proc in load_json(instance['command'].split(' ')):
+            tags = [
+                "node_id:%s" % proc['pm2_env']['NODE_APP_INSTANCE'],
+                'name:%s' % proc['name'],
+                'pm_id:%s' % proc['pm_id']
+            ]
 
             # cpu, memory, errors, processes, restart
-            self.gauge('pm2.processes.cpu'.format(node_app_instance), instance['monit']['cpu'], tags=tags)
-            self.gauge('pm2.processes.memory'.format(node_app_instance), instance['monit']['memory'], tags=tags)
-            self.gauge('pm2.processes.restart'.format(node_app_instance), instance['pm2_env']['restart_time'], tags=tags)
-
-
-        self.gauge('pm2.processes.processes', instance['pm2_env']['instances'])
+            self.gauge('pm2.processes.cpu', proc['monit']['cpu'], tags=tags)
+            self.gauge('pm2.processes.memory', proc['monit']['memory'], tags=tags)
+            self.gauge('pm2.processes.restart', proc['pm2_env']['restart_time'], tags=tags)
+            self.gauge('pm2.processes.processes', proc['pm2_env']['instances'], tags=tags)
 
 if __name__ == '__main__':
     check, instances = Pm2.from_yaml('conf.d/pm2.yaml')
