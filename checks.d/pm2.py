@@ -10,9 +10,12 @@ class Pm2(AgentCheck):
     def load_json(self, command):
         p = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out = p.communicate()
-        self.log.info('Raw data from: %s' % command)
-        self.log.info(out)
+
+        if out[1]:
+            raise SystemError(out[1])
+
         return json.loads(out[0])
+
 
     def check(self, instance):
 
