@@ -5,18 +5,18 @@ import time
 
 from checks import AgentCheck
 
-
-def load_json(command):
-    p = subprocess.Popen(command, stdout=subprocess.PIPE)
-    out = p.communicate()[0]
-    return json.loads(out)
-
-
 class Pm2(AgentCheck):
+
+    def load_json(self, command):
+        p = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = p.communicate()
+        self.log.info('Raw data from: %s' % command)
+        self.log.info(out)
+        return json.loads(out[0])
 
     def check(self, instance):
 
-        for proc in load_json(instance['command'].split(' ')):
+        for proc in self.load_json(instance['command']):
             tags = [
                 "node_id:%s" % proc['pm2_env']['NODE_APP_INSTANCE'],
                 'name:%s' % proc['name'],
